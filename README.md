@@ -1,206 +1,195 @@
-## TYpora 最新版激发教程
+## 写在前面
 
-> Yporainject（[复制自 NodeInject 项目 Copy from repo NodeInject](https://github.com/DiamondHunters/NodeInject)）
+原帖以及工具来自：
 
-> **[查看 Node_inject 项目说明书 See the README of that repo](./NodeInject_README.md)**
->
-> 作者：叶月绘梨依
-> 日期：2023年6月10日
----
+https://www.52pojie.cn/thread-1710146-1-1.html
 
-#### 已通过测试平台(来自原项目 Node_inject)
-- [x] Windows
-- [x] Ubuntu
-- [ ] MacOs
-> Since macos may adopt different packaging methods and webkit as the execution environment, this tool does not support applications under macos.
-#### 本仓库使用到的开源项目
-- [Node_inject](https://github.com/DiamondHunters/NodeInject)
-- [Node_inject_example](https://github.com/DiamondHunters/NodeInject_Hook_example)
+https://github.com/DiamondHunters/NodeInject_Hook_example
 
-### **[怎么提问 how to issue](./issue_template.md)**
+最近在搞深度学习所以转移到linux系统上，希望使用Typora进行数据记录，然后在吾爱论坛内找到了上述老哥的文章，按照教程进行了操作，并对代码进行了稍加分析，希望可以对此感兴趣的朋友们可以借鉴参考。本人是Rust半入门小白，如果分析的不对还请指正。
 
-请您提问之前，请自行确认:
-- 尝试通过网络解决遇到的问题，你确信网络不能解决你的问题
-- 确定已有的 **issue** 不能解决你的问题
-- 确定 **issue** 按照如下格式: [问题]: 问题描述
+详细的原理介绍请查看上贴，本教程主要记录一下在linux上操作的步骤，Mac也可以按照这个步骤进行激活。
 
-**请您按照提问模板填写(文件位于仓库 issue_template.md)<br/>
-谢谢您的配合，祝您生活愉快!**
+我个人的理解如下： 在 Typora 加载 Crypto 和 electron-fetch 库时返回经过修改的对象，对 electron-fetch 对象根据请求链接返回 mock 的有效 License 结果。修改 Crypto 对象判断解密内容是否为 mock 内容来返回 mock 的解密 license 数据。最终实现了对验证流程的劫持，通过输入符合 typora 本地判断的激活码，hook 代码返回正确的验证数据。
 
+## 激活操作的步骤
 
----
-#### 1. 下载最新版 Typora 安装包
+这是本人的Ubuntu系统信息：
 
-- [前往 Typora 中文官网下载](https://typoraio.cn/releases/all)
-
-- 在终端下输入以下命令直接下载(我电脑是 X86 架构的，请根据自己电脑自行选择)
-
-  ```bash
-  # 查看电脑架构
-  uname -m
-  
-  # 下载 Typora 安装包
-  # X86(Amd) 架构 
-  wget https://download2.typoraio.cn/linux/typora_1.7.4_amd64.deb --output-document typora.deb
-  
-  # Arm 架构
-  wget https://download2.typoraio.cn/linux/typora_1.7.4_arm64.deb --output-document typora.deb
-  
-  # 安装 Typora 软件包
-  sudo dpkg -i typora.deb
-  ```
-
-  
-
-#### 2. 克隆 Yporaject 项目
-
-可以直接克隆本项目仓库(本项目对原两个项目进行了合并)，好处是一键编译即可，坏处是本项目并未和原项目代码同步
-
-```bash
-# 可以直接克隆本项目的仓库, depth=1 表示仅克隆最新版本,以减少等待时间
-git clone https://github.com/hazukieq/Yporaject.git --depth=1
+```c
+          	.-/+oossssoo+/-.               @linux 
+        `:+ssssssssssssssssss+:`           ------------- 
+      -+ssssssssssssssssssyyssss+-         OS: Ubuntu 22.04.3 LTS x86_64 
+    .ossssssssssssssssssdMMMNysssso.       Host: 82K2 15ACH6 
+   /ssssssssssshdmmNNmmyNMMMMhssssss/      Kernel: 6.2.0-39-generic 
+  +ssssssssshmydMMMMMMMNddddyssssssss+     Uptime: 56 mins 
+ /sssssssshNMMMyhhyyyyhmNMMMNhssssssss/    Packages: 1991 (dpkg), 15 (snap) 
+.ssssssssdMMMNhsssssssssshNMMMdssssssss.   Shell: zsh 5.8.1 
++sssshhhyNMMNyssssssssssssyNMMMysssssss+   Resolution: 1920x1080 
+ossyNMMMNyMMhsssssssssssssshmmmhssssssso   DE: GNOME 42.9 
+ossyNMMMNyMMhsssssssssssssshmmmhssssssso   WM: Mutter 
++sssshhhyNMMNyssssssssssssyNMMMysssssss+   WM Theme: Yaru 
+.ssssssssdMMMNhsssssssssshNMMMdssssssss.   Theme: Yaru-dark [GTK2/3] 
+ /sssssssshNMMMyhhyyyyhdNMMMNhssssssss/    Icons: Yaru [GTK2/3] 
+  +sssssssssdmydMMMMMMMMddddyssssssss+     Terminal: gnome-terminal 
+   /ssssssssssshdmNNNNmyNMMMMhssssss/      CPU: AMD Ryzen 5 5600H with Radeon G 
+    .ossssssssssssssssssdMMMNysssso.       GPU: AMD ATI 05:00.0 Cezanne 
+      -+sssssssssssssssssyyyssss+-         GPU: NVIDIA GeForce RTX 3060 Mobile 
+        `:+ssssssssssssssssss+:`           Memory: 3649MiB / 13817MiB 
+            .-/+oossssoo+/-.
 ```
 
-或者克隆原项目仓库
+激活步骤大纲如下：
 
-```bash
-# 原项目仓库, depth=1 表示仅克隆最新版本,以减少等待时间
-git clone https://github.com/DiamondHunters/NodeInject --depth=1 
+1. 下载Typora
+2. 下载NodeInject_Hook_example
+3. 配置 rust 编译环境
+4. 构建自动注入工具并放在typora下运行
+5. 运行脚本获取License
+6. 填入激活码激活软件
 
-git clone https://github.com/DiamondHunters/NodeInject_Hook_example --depth=1
+### 下载Typora
 
-# 建立 Yproraject 文件夹
-mkdir Yporaject
+```rust
+# 下载 Typora
+wget <https://download2.typoraio.cn/linux/typora_1.7.4_amd64.deb> --output-document typora.deb
 
-# 将两个项目资源合并
-# 将 NodeInject 项目代码复制到 Yproraject 文件夹
-cp NodeInject/* Yporaject -r
-
-# 将 NodeInject_Hook_example/hook.js 复制到 Yporaject/src 文件夹
-cp NodeInject_Hook_example/hook.js Yporaject/src
-
-# 将 NodeInject_Hook_example/license_gen 文件夹复制到 Yporaject 文件夹
-cp NodeInject_Hook_example/license_gen Yporaject -r
+# 安装命令
+sudo dpkg -i typora.deb
 ```
 
+### 下载NodeInject_Hook_example
 
-
-#### 3. 配置 Rust 编译环境
-
-由于编译项目需要 **Rust** 的支持，所以我们需要配置相关环境(若已有，则可跳过该步骤)
-
-```bash
-# 运行官方脚本安装即可
-curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-
-# 检查 cargo，若看到如下版本信息，则说明配置成功
-cargo -v
-cargo 1.70.0 (ec8a8a0ca 2023-04-25)
+```rust
+git clone <https://github.com/DiamondHunters/NodeInject_Hook_example>
 ```
 
-注：若安装过程中出现其他问题，请自行网上搜索相关安装教程，关键字 `ubuntu ` `cargo  ` `rust`   `install`
+### 配置 rust 编译环境
 
+运行[Rust官网](https://www.rust-lang.org/tools/install)的代码进行配置：
 
-
-#### 4. 编译 Yporaject 项目
-
-```bash
-# 进入 Yporaject 项目
-cd Yporaject
-# 运行编译命令
-cargo build
-# 查看二进制是否生成,程序名称为 node_inject
-ls target/debug
-# 尝试运行该二进制程序
-cargo run
-output: 
-no node_modules.asar found
-move me to the root of your typora installation(the same directory as executable of electron)
+```rust
+curl --proto '=https' --tlsv1.2 -sSf <https://sh.rustup.rs> | sh
 ```
 
-请务必确认当前项目目录 **target/debug 下** 是否生成了 **node_inject 二进制程序**
+### 构建自动注入工具并放在typora下运行
 
+进入项目文件夹运行`cargo build`生成可执行文件
 
+之后把生成的可执行文件移动到typora的安装目录下
 
-#### 5. 复制二进制程序到安装目录下
-
-```bash
-# 记录当前目录路径，待会返回需要用到
-cur=`pwd`
-
-# 复制二进制程序到相关目录下
-sudo cp target/debug/node_inject /usr/share/typora
-# 进入相关目录
-cd /usr/share/typora
-# 给予二进制程序执行权限
-sudo chmod +x node_inject
-
-# 运行二进制程序
-# (请注意程序运行输出信息，观察是否运行成功！！)
-# 若无读写权限,建议使用 sudo ./node_inject
-sudo ./node_inject
+```rust
+sudo cp target/debug/license-gen /usr/share/typora
 ```
 
+运行之后可以看到`license-gen`已经在Typora安装目录下了：
 
+之后给可执行文件权限和运行它
 
-#### 6. 获取许可证激发码
+### 运行脚本获取License
 
-```bash
-# 返回项目
-cd $cur
-# 进入 license-gen 文件夹
-cd license-gen
-# 编译代码
-cargo build
-# 运行二进制程序
-cargo run
-# 你将会得到以下输出
-output:
-    Finished dev [unoptimized + debuginfo] target(s) in 0.00s
-     Running `target/debug/license-gen`
-License for you: xxxxxx-xxxxxx-xxxxxx-xxxxxx
+回到最初的项目目录运行`cargo build`和`cargo run`得到下面的输出：
+
+### 填入激活码激活软件
+
+## Rust代码的简单解读
+
+这是用于生成许可证密钥（license key）的**`main.rs`**，使用了一个名为 **`random_string`** 的 crate 来生成随机字符串（**xxxxxx-xxxxxx-xxxxxx-xxxxxx的激活码**），还定义了一个常量 **`LICENSE_CHARS`**，其中包含了许可证密钥可能包含的字符集（"L23456789ABCDEFGHJKMNPQRSTUVWXYZ"）。我查了一下，这里面没有1和I是为了避免混淆。
+
+```rust
+// 导入 random_string crate 的 generate 函数
+use random_string::generate;
+
+// 定义许可证字符集合
+const LICENSE_CHARS: &str = "L23456789ABCDEFGHJKMNPQRSTUVWXYZ";
+
+fn main() {
+    // 调用生成License函数
+    generate_license();
+}
+
+fn generate_license(){
+    // 生成一个长度为 22 的随机字符串
+    let mut license = generate(22, LICENSE_CHARS);
+
+    // 进行两次迭代，对字符串进行修改
+    for n in 0..2 {
+        let mut o = 0;
+        
+        // 在每次迭代中，每隔两个字符，寻找字符在字符集合中的位置，并进行数学运算
+        for i in (0..16).step_by(2) {
+            o += LICENSE_CHARS.find(&license[n + i..=n + i]).unwrap();
+        }
+        
+        // 对运算的结果取模
+        o %= LICENSE_CHARS.len();
+        
+        // 将运算的结果接到许可证字符串后面
+        license += &LICENSE_CHARS[o..=o];
+    }
+    
+    // 在特定位置插入连字符，模拟标准许可证密钥的格式, **xxxxxx-xxxxxx-xxxxxx-xxxxxx的形式**
+    license.insert(6, '-');
+    license.insert(13, '-');
+    license.insert(20, '-');
+    
+    // 打印生成的许可证密钥
+    println!("License for you: {}", license);
+}
 ```
 
-复制 **License for you: xxxxxx-xxxxxx-xxxxxx-xxxxxx** 的那一串激发码，待会需要用到
+主函数是 **`generate_license()`**，它生成了一个长度为 22 的随机字符串，然后在特定位置插入了几个连字符，以模拟许可证密钥的标准格式。在生成初始的长度为 22 的许可证密钥后，脚本进入一个循环，两次迭代，每次迭代对已生成的密钥进行修改。在每次迭代中，它使用**`LICENSE_CHARS.find()`** 找到字符在 **`LICENSE_CHARS`** 字符集中的位置。
 
-#### 7. 激活软件
+```rust
+# This file is automatically @generated by Cargo.
+# It is not intended for manual editing.
+version = 3
 
-```bash
-#运行 Typora (你也可以在桌面上点击相关图标)
-typora &
+[[package]]
+name = "cfg-if"
+version = "1.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
+
+[[package]]
+name = "fastrand"
+version = "1.8.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a7a407cfaa3385c4ae6b23e84623d48c2798d06e3e6a1878f7f59f17b3f86499"
+dependencies = [
+ "instant",
+]
+
+[[package]]
+name = "instant"
+version = "0.1.12"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7a5bbe824c507c5da5956355e86a746d82e0e1464f65d862cc5e71da70e94b2c"
+dependencies = [
+ "cfg-if",
+]
+
+[[package]]
+name = "license-gen"
+version = "0.1.0"
+dependencies = [
+ "random-string",
+]
+
+[[package]]
+name = "random-string"
+version = "1.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "cf4e63111ec5292d8af9c220f06fe3bb87991cc78b6f1f7e291d1ae6b8a60817"
+dependencies = [
+ "fastrand",
+]
 ```
 
-依次点击界面上方菜单栏选项 **help > my license(帮助 > 我的许可证...)** 
+`cargo.lock` 文件是 Rust 项目中的一个自动生成的文件，用于记录项目中使用的所有依赖项及其确切的版本信息。
 
-![image-20230611002616301](./img/image-20230611002616301.png)
-
-
-
-
-
-![image-20230611002645270](./img/image-20230611002645270.png)
-
-
-
-邮箱可以随便填
-
-然后在第二输入框中，**粘贴刚才得到的激发码**
-
-点击 `激活` 按钮后，你将会看到以下界面
-
-
-
-![image-20230611002933127](./img/LICENSE.png)
-
-
-
-#### 结语
-
-经过几番查找，好多教程都不怎么符合我的需求，且在 `CSDN` 等平台上各种转载、胡乱复制的帖子...看得真是心累。不知是不是由于我用的软件比较新的缘故， 比如 **poraCracker 就没有用。后面看到了NodeInject这个项目，我抱着尝试的态度按照项目指南操作，没想到竟然真的激活成功了。为了以后自己能想起这个方法，特此记录。
-
-
-
-##### 参考资料
-
-1. [**(Linux/Windows) Typora 理论多版本兼容破解方案**](https://www.52pojie.cn/thread-1710146-1-1.html)
-2. [RUST 安装](https://www.rust-lang.org/zh-CN/learn/get-started)
+1. **cfg-if (1.0.0)**: 一个用于配置宏的轻量级库，用于在编译时根据条件选择不同的实现。
+2. **fastrand (1.8.0)**: 提供了一个快速的伪随机数生成器依赖了 `instant` 库。
+3. **instant (0.1.12)**: 时间库，提供了 `Instant` 类型，用于获取当前时间的高精度计时。
+4. **license-gen (0.1.0)**: 项目依赖了 `random-string` 库。
+5. **random-string (1.0.0)**: 生成随机字符串的库依赖了 `fastrand` 库。
